@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Spin Wheel</title>
+    <style>
+        /* 原有样式保持不变 */
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .background {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #001100, #003300);
+            z-index: -1;
+        }
+
+        .container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin-top: 2rem;
+        }
+
+        .wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.25, 0.1, 0.25, 1);
+            background: #000;
+            border: 3px solid #00ff00;
+            box-shadow: 0 0 20px #00ff0080;
+        }
+
+        .segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            clip-path: polygon(100% 50%, 50% 100%, 0 50%, 50% 0);
+            transform-origin: 100% 100%;
+            background: #001100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00ff00;
+            font-weight: bold;
+            transform: rotate(30deg);
+        }
+
+        .segment span {
+            transform: rotate(-30deg);
+            text-align: center;
+            font-size: 14px;
+            padding: 10px;
+        }
+
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 40px;
+            background: #ff0000;
+            clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
+            z-index: 2;
+        }
+
+        button {
+            margin-top: 2rem;
+            padding: 15px 30px;
+            background: #00ff00;
+            border: none;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px #00ff00;
+        }
+
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(-100%) rotate(0deg); }
+            100% { transform: translateY(100vh) rotate(360deg); }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #00ff00;
+            animation: confetti 3s linear;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #002200;
+            padding: 2rem;
+            border-radius: 15px;
+            border: 3px solid #00ff00;
+            color: #00ff00;
+            text-align: center;
+            animation: modalIn 0.5s, glow 2s infinite;
+            min-width: 280px;
+            z-index: 1000;
+        }
+
+        /* 新增确认按钮样式 */
+        .modal-confirm-btn {
+            margin-top: 20px;
+            padding: 12px 30px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+
+        .modal-confirm-btn:hover {
+            background: #00cc00;
+        }
+
+        .staff-note {
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
+        }
+
+        /* 新增拍照提示样式 */
+        .photo-reminder {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #002200;
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: 2px solid #ffd700;
+            color: #ffd700;
+            font-size: 1.2rem;
+            text-align: center;
+            box-shadow: 0 0 20px #ffd70080;
+            display: none;
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 20px #ffd70080; }
+            50% { transform: translateX(-50%) scale(1.05); box-shadow: 0 0 40px #ffd700; }
+            100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 20px #ffd70080; }
+        }
+
+        /* 其他原有动画样式保持不变 */
+        @keyframes modalIn {
+            from { transform: translate(-50%, -150%); opacity: 0; }
+            to { transform: translate(-50%, -50%); opacity: 1; }
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 30px #00ff00; }
+            50% { box-shadow: 0 0 60px #00ff00; }
+            100% { box-shadow: 0 0 30px #00ff00; }
+        }
+
+        .modal h2 {
+            font-size: 2rem;
+            margin: 0 0 1rem;
+            color: #ffd700;
+            text-shadow: 0 0 10px #ffd700;
+            animation: textGlow 2s infinite;
+        }
+
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 10px #ffd700; }
+            50% { text-shadow: 0 0 20px #ffd700; }
+            100% { text-shadow: 0 0 10px #ffd700; }
+        }
+
+        .modal p {
+            font-size: 1.5rem;
+            margin: 0;
+            animation: scaleText 1.5s infinite;
+        }
+
+        @keyframes scaleText {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .modal-icon {
+            font-size: 4rem;
+            animation: pulse 1.5s infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="background"></div>
+    <div class="container">
+        <div class="pointer"></div>
+        <div class="wheel" id="wheel"></div>
+    </div>
+    <button id="spinBtn">SPIN NOW</button>
+    <div class="modal" id="resultModal"></div>
+    <div class="photo-reminder" id="photoReminder">
+        Snap a photo with Maker+Tag #IAmAMaker #TCT2025<br>
+        Get an exclusive souvenir!
+    </div>
+
+    <script>
+        const prizes = ["Bags", "T-Shirts", "Pins", "Hats", "Filaments", "$50 vouchers"];
+        const segmentAngle = 360 / prizes.length;
+        let isSpinning = false;
+        
+        function createWheel() {
+            const wheel = document.getElementById('wheel');
+            prizes.forEach((prize, index) => {
+                const segment = document.createElement('div');
+                segment.className = 'segment';
+                segment.style.transform = `rotate(${index * segmentAngle}deg)`;
+                
+                const span = document.createElement('span');
+                span.textContent = prize;
+                segment.appendChild(span);
+                
+                wheel.appendChild(segment);
+            });
+        }
+
+        function createConfetti() {
+            for(let i=0; i<50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                document.body.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function showResult(prize) {
+            const modal = document.getElementById('resultModal');
+            modal.innerHTML = `
+                <div class="modal-icon">🎉</div>
+                <h2>CONGRATULATIONS!</h2>
+                <p>You won:<br><strong>${prize}</strong></p>
+                <button class="modal-confirm-btn" id="confirmBtn">CONFIRM</button>
+                <p class="staff-note">Please visit an on-site staff member to confirm and redeem your prize</p>
+            `;
+            modal.style.display = 'block';
+            createConfetti();
+
+            document.getElementById('confirmBtn').addEventListener('click', () => {
+                modal.style.display = 'none';
+                showPhotoReminder();
+            });
+        }
+
+        function showPhotoReminder() {
+            const reminder = document.getElementById('photoReminder');
+            reminder.style.display = 'block';
+            setTimeout(() => {
+                reminder.style.display = 'none';
+            }, 15000);
+        }
+
+        function spin() {
+            if (isSpinning) return;
+            isSpinning = true;
+            
+            const randomIndex = Math.floor(Math.random() * prizes.length);
+            const degrees = (360 * 5) + (randomIndex * segmentAngle);
+            
+            document.getElementById('wheel').style.transform = `rotate(${degrees}deg)`;
+            
+            setTimeout(() => {
+                showResult(prizes[randomIndex]);
+                isSpinning = false;
+                startCooldown();
+            }, 5000);
+        }
+
+        function startCooldown() {
+            const btn = document.getElementById('spinBtn');
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.disabled = false;
+            }, 3600000);
+        }
+
+        window.onload = () => {
+            createWheel();
+            document.getElementById('spinBtn').addEventListener('click', spin);
+        };
+    </script>
+</body>
+</html>
